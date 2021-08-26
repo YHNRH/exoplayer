@@ -21,7 +21,26 @@ export class Video extends VideoBase {
                 }
             }
         }
-        this._player = AVPlayer.new();
+
+
+        let url = NSURL.URLWithString(this._src);
+        // console.log("---------------------");
+        // console.log("_src " + this._src)
+
+
+
+        var headers = new NSMutableDictionary();
+        headers.setObjectForKey(this.token ?? "", "Authorization");
+        var options = NSDictionary.dictionaryWithDictionary({
+            "AVURLAssetHTTPHeaderFieldsKey": headers
+        });
+        var asset = AVURLAsset.URLAssetWithURLOptions(url, options);
+        var item = AVPlayerItem.playerItemWithAsset(asset);
+        this._player = AVPlayer.playerWithPlayerItem(item);
+
+
+
+       // this._player = AVPlayer.new();
         this._playerController.player = this._player;
         // showsPlaybackControls must be set to false on init to avoid any potential 'Unable to simultaneously satisfy constraints' errors
         this._playerController.showsPlaybackControls = false;
@@ -35,6 +54,7 @@ export class Video extends VideoBase {
             this._setupSubtitleLabel();
         }
     }
+
     [videoSourceProperty.setNative](value) {
         this._setNativeVideo(value ? value.ios : null);
     }
@@ -55,6 +75,7 @@ export class Video extends VideoBase {
     [subtitleSourceProperty.setNative](value) {
         this._updateSubtitles(value ? value.ios : null);
     }
+
     _setNativeVideo(nativeVideoPlayer) {
         //console.log("Set native video: "+nativeVideoPlayer);
         if (this._player == null) {
@@ -63,6 +84,17 @@ export class Video extends VideoBase {
             }, 100);
             return;
         }
+            var url = NSURL.URLWithString(this._url);
+            var headers = new NSMutableDictionary();
+            headers.setValueForKey(this.token, "Authorization");
+            var options = NSDictionary.dictionaryWithDictionary({
+                AVURLAssetHTTPHeaderFieldsKey: headers
+            });
+            var asset = AVURLAsset.URLAssetWithURLOptions(url, options);
+            var item = AVPlayerItem.playerItemWithAsset(asset);
+        //     nativeVideoPlayer = item;
+        //     console.log("nativeVideoPlayer " + nativeVideoPlayer);
+        // }
         if (nativeVideoPlayer != null) {
             let currentItem = this._player.currentItem;
             this._addStatusObserver(nativeVideoPlayer);
@@ -75,10 +107,13 @@ export class Video extends VideoBase {
                 this._removeStatusObserver(currentItem);
                 // Need to set to null so the previous video is not shown while its loading
                 this._player.replaceCurrentItemWithPlayerItem(null);
-                this._player.replaceCurrentItemWithPlayerItem(nativeVideoPlayer);
+                //this._player.replaceCurrentItemWithPlayerItem(nativeVideoPlayer);
+                this._player.replaceCurrentItemWithPlayerItem(item);
+            
             }
             else {
-                this._player.replaceCurrentItemWithPlayerItem(nativeVideoPlayer);
+             //   this._player.replaceCurrentItemWithPlayerItem(nativeVideoPlayer);
+                this._player.replaceCurrentItemWithPlayerItem(item);
                 this._init();
             }
         }
@@ -88,9 +123,31 @@ export class Video extends VideoBase {
         this._setNativeVideo(newPlayerItem);
     }
     _setNativePlayerSource(nativePlayerSrc) {
+        // let headers = [
+        //     "custome_header": "custome value"
+        //  ]
+        //  let asset = AVURLAsset(url: URL, options: ["AVURLAssetHTTPHeaderFieldsKey": headers])
+        //  let playerItem = AVPlayerItem(asset: asset)
+
         this._src = nativePlayerSrc;
         let url = NSURL.URLWithString(this._src);
-        this._player = new AVPlayer(url);
+        console.log("---------------------");
+        console.log("_src " + this._src)
+
+
+
+        var headers = new NSMutableDictionary();
+        headers.setValueForKey(this.token, "Authorization");
+        var options = NSDictionary.dictionaryWithDictionary({
+            AVURLAssetHTTPHeaderFieldsKey: headers
+        });
+        var asset = AVURLAsset.URLAssetWithURLOptions(url, options);
+        var item = AVPlayerItem.playerItemWithAsset(asset);
+        this._player = AVPlayer.playerWithPlayerItem(item);
+
+
+
+        //this._player = new AVPlayer(url);
         this._playerController.player = null;
         this._playerController.player = this._player;
         //console.log("Video src: "+ this._src);
@@ -179,6 +236,7 @@ export class Video extends VideoBase {
         if (this.observeCurrentTime && !this._playbackTimeObserverActive) {
             this._addPlaybackTimeObserver();
         }
+        console.log("this.playerController " + this._playerController)
         this._player.play();
     }
     pause() {
